@@ -1,0 +1,62 @@
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    container_name: beacon-mediamtx
+    restart: unless-stopped
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml:ro
+    networks:
+      - beacon
+    expose:
+      - "8888"   # HLS
+      - "8889"   # WebRTC signaling
+      - "9997"   # API (internal only)
+    ports:
+      - "1935:1935"    # RTMP (optional, for YouTube relay)
+      - "8189:8189/udp" # WebRTC ICE media (UDP)
+      - "8189:8189/tcp" # WebRTC ICE media (TCP fallback)
+
+  app:
+    image: nginx:alpine
+    container_name: beacon-app
+    restart: unless-stopped
+    volumes:
+      - ./app:/usr/share/nginx/html:ro
+    networks:
+      - beacon
+    expose:
+      - "80"
+
+  nginx:
+    image: nginx:alpine
+    container_name: beacon-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd:ro
+      - ./certbot-certs:/etc/letsencrypt:ro
+      - ./certbot-webroot:/var/www/certbot:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+    depends_on:
+      - mediamtx
+      - app
+    networks:
+      - beacon
+
+  certbot:
+    image: certbot/certbot
+    container_name: beacon-certbot
+    volumes:
+      - ./certbot-certs:/etc/letsencrypt
+      - ./certbot-webroot:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'"
+    networks:
+      - beacon
+
+networks:
+  beacon:
+    driver: bridge

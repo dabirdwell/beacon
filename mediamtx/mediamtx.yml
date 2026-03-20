@@ -1,0 +1,28 @@
+# Beacon MediaMTX Configuration
+logLevel: warn
+api: yes
+apiAddress: :9997
+
+hlsAddress: :8888
+webrtcAddress: :8889
+
+# WebRTC ICE — single port for all media (exposed via Docker)
+webrtcICEUDPMuxAddress: :8189
+webrtcICETCPMuxAddress: :8189
+
+# Public IP for NAT traversal — populated by setup.sh
+# Without this, browsers can't send media to MediaMTX behind Docker.
+webrtcICEHostNAT1To1IPs: []
+
+paths:
+  live:
+    source: publisher
+    # WebRTC publishing from browser
+    webrtcEnabled: yes
+    # HLS for viewers
+    hlsEnabled: yes
+    hlsSegmentCount: 3
+    hlsSegmentDuration: 2s
+    # RTMP output to YouTube if key provided (populated by setup.sh)
+    runOnReady:
+    runOnReadyRestart: no

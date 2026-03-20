@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beacon — One-Button Live Streaming</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 60px 24px;
+        }
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        h1 span { color: #00b4b4; }
+        .tagline {
+            font-size: 20px;
+            color: #999;
+            margin-bottom: 48px;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+        p {
+            font-size: 16px;
+            color: #bbb;
+            margin-bottom: 12px;
+        }
+        .steps {
+            list-style: none;
+            counter-reset: step;
+        }
+        .steps li {
+            counter-increment: step;
+            padding: 12px 0;
+            padding-left: 40px;
+            position: relative;
+            font-size: 16px;
+        }
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            width: 28px;
+            height: 28px;
+            background: #00b4b4;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        code {
+            background: rgba(255,255,255,0.08);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #00b4b4;
+        }
+        .cta {
+            display: inline-block;
+            margin-top: 32px;
+            padding: 16px 40px;
+            background: #00b4b4;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .cta:hover { opacity: 0.85; }
+        .footer {
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 14px;
+            color: #666;
+        }
+        .footer a { color: #00b4b4; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span>Beacon</span></h1>
+        <p class="tagline">One-button live streaming for communities and civic groups.</p>
+
+        <div class="section">
+            <h2>What it does</h2>
+            <p>Beacon lets anyone go live from their phone with a single tap. No accounts, no app stores, no configuration for the person streaming. One technical person sets it up on a server; everyone else just opens a link and taps GO LIVE.</p>
+        </div>
+
+        <div class="section">
+            <h2>Who it's for</h2>
+            <p>Neighborhood watch groups. Civic organizations. Community monitors. Anyone who needs a fast, reliable way to share what's happening — on infrastructure they control.</p>
+        </div>
+
+        <div class="section">
+            <h2>How it works</h2>
+            <ol class="steps">
+                <li>Set up Beacon on any server with Docker (<code>bash setup.sh</code>)</li>
+                <li>Open the streamer URL on your phone</li>
+                <li>Tap <strong>GO LIVE</strong></li>
+                <li>Share the viewer link — anyone can watch in their browser</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>Self-hosted. Open source. Free.</h2>
+            <p>Beacon runs on your server. Your stream goes through your infrastructure. No third-party dependencies, no platform risk, no data collection. MIT licensed.</p>
+        </div>
+
+        <a href="https://github.com/humanityandai/beacon" class="cta">Get Beacon on GitHub</a>
+
+        <div class="footer">
+            <p>A project of <a href="https://humanityandai.com">Humanity and AI</a> &middot; <a href="https://github.com/humanityandai/beacon">Source code</a></p>
+        </div>
+    </div>
+</body>
+</html>
