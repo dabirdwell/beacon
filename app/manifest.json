@@ -2,7 +2,7 @@
   "name": "Beacon",
   "short_name": "Beacon",
   "description": "One-button live streaming",
-  "start_url": "/",
+  "start_url": "/go.html",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#00b4b4",

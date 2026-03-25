@@ -127,6 +127,31 @@
             font-size: 18px;
             text-align: center;
         }
+        .bottom-bar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            z-index: 2;
+            font-size: 13px;
+            color: #ccc;
+            pointer-events: none;
+        }
+        .bottom-bar .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .conn-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .conn-dot.on { background: #30d060; }
+        .conn-dot.off { background: #e03030; }
     </style>
 </head>
 <body>
@@ -151,6 +176,12 @@
         <div id="ended" class="ended" style="display:none;">
             Stream ended
         </div>
+
+        <div class="bottom-bar" id="bottom-bar" style="display:none;">
+            <div class="stat"><span class="conn-dot off" id="conn-dot"></span><span id="conn-label">Disconnected</span></div>
+            <div class="stat" id="uptime-stat" style="display:none;">&#x23F1; <span id="uptime">0:00</span></div>
+            <div class="stat" id="viewers-stat" style="display:none;">&#x1F441; <span id="viewer-count">1</span></div>
+        </div>
     </div>
 
     <script>
@@ -173,9 +204,39 @@
             document.title = `Beacon — ${decodeURIComponent(title)}`;
         }
 
+        const bottomBar = document.getElementById('bottom-bar');
+        const connDot = document.getElementById('conn-dot');
+        const connLabel = document.getElementById('conn-label');
+        const uptimeStat = document.getElementById('uptime-stat');
+        const uptimeEl = document.getElementById('uptime');
+        const viewersStat = document.getElementById('viewers-stat');
+
         let hls = null;
         let pollTimer = null;
         let wasLive = false;
+        let liveStartTime = null;
+        let uptimeTimer = null;
+
+        function formatDuration(ms) {
+            const s = Math.floor(ms / 1000);
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            const sec = s % 60;
+            if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+            return `${m}:${String(sec).padStart(2,'0')}`;
+        }
+
+        function startUptime() {
+            liveStartTime = Date.now();
+            uptimeTimer = setInterval(() => {
+                uptimeEl.textContent = formatDuration(Date.now() - liveStartTime);
+            }, 1000);
+        }
+
+        function stopUptime() {
+            if (uptimeTimer) { clearInterval(uptimeTimer); uptimeTimer = null; }
+            liveStartTime = null;
+        }
 
         function setLive() {
             liveBadge.className = 'badge live';
@@ -184,18 +245,36 @@
             endedEl.style.display = 'none';
             video.style.display = 'block';
             wasLive = true;
+            // Bottom bar
+            bottomBar.style.display = 'flex';
+            connDot.className = 'conn-dot on';
+            connLabel.textContent = 'Connected';
+            uptimeStat.style.display = 'flex';
+            viewersStat.style.display = 'flex';
+            if (!liveStartTime) startUptime();
         }
 
         function setWaiting() {
             liveBadge.className = 'badge offline';
             liveBadge.textContent = 'OFFLINE';
             video.style.display = 'none';
+            stopUptime();
             if (wasLive) {
                 endedEl.style.display = 'flex';
                 waitingEl.style.display = 'none';
+                bottomBar.style.display = 'flex';
+                connDot.className = 'conn-dot off';
+                connLabel.textContent = 'Disconnected';
+                uptimeStat.style.display = 'none';
+                viewersStat.style.display = 'none';
             } else {
                 waitingEl.style.display = 'flex';
                 endedEl.style.display = 'none';
+                bottomBar.style.display = 'flex';
+                connDot.className = 'conn-dot off';
+                connLabel.textContent = 'Waiting';
+                uptimeStat.style.display = 'none';
+                viewersStat.style.display = 'none';
             }
         }
 

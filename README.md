@@ -28,7 +28,7 @@ A self-hosted, one-button live streaming tool for communities and civic groups. 
 
 ## How to Go Live
 
-1. Open `https://your-domain/` on your phone.
+1. Open `https://your-domain/go.html` on your phone.
 2. Tap **GO LIVE**.
 
 Your camera and microphone activate, and the stream starts immediately. A share link and QR code appear on screen.
