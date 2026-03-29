@@ -1,0 +1,31 @@
+# Fly.io single-container build: MediaMTX + nginx + static PWA
+# Fly handles SSL termination — this container listens on port 8080
+
+FROM bluenviron/mediamtx:latest AS mediamtx
+
+FROM nginx:alpine
+
+# Copy MediaMTX binary
+COPY --from=mediamtx /mediamtx /usr/local/bin/mediamtx
+
+# Copy MediaMTX config
+COPY mediamtx/mediamtx.yml /etc/mediamtx/mediamtx.yml
+
+# Copy PWA app files
+COPY app/ /var/www/html/
+
+# Copy Fly-specific nginx config (no SSL, localhost routing)
+COPY nginx/fly.conf /etc/nginx/conf.d/default.conf
+
+# Remove default nginx config that conflicts
+RUN rm -f /etc/nginx/conf.d/default.conf.bak
+
+# Copy entrypoint (configures public IP, starts both processes)
+COPY fly/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 8080
+EXPOSE 8189/udp
+EXPOSE 8189/tcp
+
+ENTRYPOINT ["/entrypoint.sh"]

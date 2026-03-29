@@ -1,0 +1,38 @@
+app = "beacon-hai"
+primary_region = "dfw"
+
+[build]
+  dockerfile = "Dockerfile.fly"
+
+# HTTP service — Fly terminates SSL, forwards to nginx on 8080
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+# WebRTC ICE media — UDP must be exposed directly for streaming
+[[services]]
+  protocol = "udp"
+  internal_port = 8189
+  [[services.ports]]
+    port = 8189
+
+# Health check — hits MediaMTX API through nginx
+[checks]
+  [checks.status]
+    type = "http"
+    port = 8080
+    path = "/status"
+    interval = "30s"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = 512

@@ -64,6 +64,32 @@ Phone browser ──WHIP/WebRTC──▶ MediaMTX ──HLS──▶ nginx ─�
 - **certbot** manages Let's Encrypt SSL certificates
 - WebRTC media flows over a single muxed UDP port (8189)
 
+## Quick Deploy: Fly.io
+
+No server needed — deploy Beacon to Fly.io's edge network.
+
+### Prerequisites
+- [flyctl](https://fly.io/docs/flyctl/install/) installed
+- Fly.io account (`fly auth login`)
+
+### Deploy
+
+```bash
+bash deploy.sh
+```
+
+This creates a single-container app (`beacon-hai` in Dallas) with:
+- Fly handling SSL termination (HTTPS automatic)
+- MediaMTX + nginx combined in one container
+- WebRTC UDP port exposed for streaming
+
+After deploy:
+- **Streamer:** `https://beacon-hai.fly.dev/go.html`
+- **Viewer:** `https://beacon-hai.fly.dev/watch.html`
+- **Status:** `https://beacon-hai.fly.dev/status`
+
+> **Note:** WebRTC requires a dedicated IPv4 for reliable UDP media delivery. The deploy script allocates one automatically ($2/mo on Fly.io). If WebRTC publishing doesn't work, verify with `fly ips list`.
+
 ## Advanced: Home Assistant Integration
 
 Beacon exposes a `/status` endpoint so Home Assistant can detect when a stream is live. This lets you trigger automations — notify trusted contacts, change lighting, log events.
