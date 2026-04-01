@@ -1,0 +1,55 @@
+# Standard .claudeignore — Copy to every H&AI repo
+# Prevents Claude Code from loading these into context
+
+# === TOKEN HOGS (biggest savings) ===
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.next/
+dist/
+build/
+out/
+
+# === Historical/Archive ===
+.archive/
+*_backup/
+*_old/
+planning-docs/
+*.backup.*
+
+# === Generated ===
+*.min.js
+*.min.css
+*.map
+*.d.ts
+coverage/
+.turbo/
+
+# === Assets CC doesn't need for coding ===
+public/fonts/
+public/images/
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.webp
+*.woff
+*.woff2
+*.ttf
+*.eot
+
+# === IDE/OS ===
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db
+*.swp
+*.swo
+
+# === Database ===
+prisma/migrations/
+*.db
+*.sqlite
