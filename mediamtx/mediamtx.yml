@@ -23,6 +23,6 @@ paths:
     hlsEnabled: yes
     hlsSegmentCount: 3
     hlsSegmentDuration: 2s
-    # RTMP output to YouTube if key provided (populated by setup.sh)
-    runOnReady:
-    runOnReadyRestart: no
+    # YouTube relay is handled by the youtube-relay sidecar container.
+    # It pulls RTMP from this server and pushes to YouTube on demand.
+    # Toggle via the UI or POST /api/youtube/start and /api/youtube/stop.

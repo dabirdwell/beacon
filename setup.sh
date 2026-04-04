@@ -42,9 +42,9 @@ if [ ! -f .env ]; then
     sed -i.bak "s/EMAIL=.*/EMAIL=${EMAIL}/" .env && rm -f .env.bak
     read -rp "  Enter an admin password for the /status page: " ADMIN_PASSWORD
     sed -i.bak "s/ADMIN_PASSWORD=.*/ADMIN_PASSWORD=${ADMIN_PASSWORD}/" .env && rm -f .env.bak
-    read -rp "  YouTube stream key (leave blank to skip): " YOUTUBE_KEY
-    if [ -n "${YOUTUBE_KEY}" ]; then
-        sed -i.bak "s/YOUTUBE_KEY=.*/YOUTUBE_KEY=${YOUTUBE_KEY}/" .env && rm -f .env.bak
+    read -rp "  YouTube stream key (leave blank to skip): " YOUTUBE_STREAM_KEY
+    if [ -n "${YOUTUBE_STREAM_KEY}" ]; then
+        sed -i.bak "s/YOUTUBE_STREAM_KEY=.*/YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY}/" .env && rm -f .env.bak
     fi
 else
     echo -e "${GREEN}  .env file found.${RESET}"
@@ -67,11 +67,10 @@ echo -e "${GREEN}  nginx/.htpasswd created.${RESET}"
 # 4. Configure YouTube relay if key provided
 echo ""
 echo -e "${BOLD}[4/8] Configuring stream settings...${RESET}"
-if [ -n "${YOUTUBE_KEY:-}" ]; then
-    sed -i.bak "s|runOnReady:.*|runOnReady: \"ffmpeg -i rtmp://localhost/live -c copy -f flv rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_KEY}\"|" mediamtx/mediamtx.yml && rm -f mediamtx/mediamtx.yml.bak
-    echo -e "${GREEN}  YouTube relay configured.${RESET}"
+if [ -n "${YOUTUBE_STREAM_KEY:-}" ]; then
+    echo -e "${GREEN}  YouTube relay enabled — toggle it from the streamer UI when live.${RESET}"
 else
-    echo "  Self-hosted only (no YouTube relay)."
+    echo "  Self-hosted only (no YouTube relay). Add YOUTUBE_STREAM_KEY to .env to enable."
 fi
 
 # 5. Check DNS and resolve public IP for WebRTC

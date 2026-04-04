@@ -43,24 +43,48 @@ They open it in any browser — no app needed, no account needed. They're watchi
 
 ## Optional: Stream to YouTube Too
 
-If you want your stream to simultaneously go to YouTube:
+Beacon can relay your stream to YouTube Live in real time. You control it from the streamer UI — no restart required.
 
-1. Get a stream key from YouTube Studio (Go Live > Stream > Copy stream key).
-2. Open your `.env` file and paste it into the `YOUTUBE_KEY=` line.
-3. Re-run `bash setup.sh` or restart: `docker compose restart`
+### Setup
 
-Your stream now goes to both your self-hosted server and YouTube at the same time.
+1. Get a stream key from YouTube Studio (Go Live → Stream → Copy stream key).
+2. Add it to your `.env` file:
+   ```
+   YOUTUBE_STREAM_KEY=xxxx-xxxx-xxxx-xxxx
+   ```
+3. Restart the relay container: `docker compose up -d youtube-relay`
+
+### Usage
+
+1. Open `https://your-domain/go.html` and tap **GO LIVE** as usual.
+2. A **YouTube** toggle button appears below the main controls.
+3. Tap it to start relaying to YouTube — a red dot confirms it's active.
+4. Tap again to stop the YouTube relay (your self-hosted stream continues).
+5. When you stop the main stream, the YouTube relay stops automatically.
+
+### API
+
+You can also control the relay programmatically:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/youtube/start` | POST | Start relaying to YouTube |
+| `/api/youtube/stop` | POST | Stop relaying to YouTube |
+| `/api/youtube/status` | GET | Check relay state (`active`, `configured`) |
 
 ## Architecture
 
 ```
 Phone browser ──WHIP/WebRTC──▶ MediaMTX ──HLS──▶ nginx ──▶ Viewer browser
                                   │
-                                  └──RTMP──▶ YouTube (optional)
+                           youtube-relay (FFmpeg)
+                                  │
+                                  └──RTMP──▶ YouTube (toggle on/off)
 ```
 
 - **MediaMTX** handles WebRTC ingest (WHIP) and HLS output
 - **nginx** reverse-proxies everything behind SSL, serves the PWA
+- **youtube-relay** FFmpeg sidecar that pushes RTMP to YouTube on demand
 - **certbot** manages Let's Encrypt SSL certificates
 - WebRTC media flows over a single muxed UDP port (8189)
 

@@ -157,6 +157,43 @@
             text-align: center;
         }
         #error-msg.active { display: block; }
+        #yt-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        #yt-section.active { display: flex; }
+        #yt-toggle {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: #999;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+        #yt-toggle:active { opacity: 0.8; }
+        #yt-toggle.on {
+            background: rgba(224,48,48,0.12);
+            border-color: rgba(224,48,48,0.4);
+            color: #ff6666;
+        }
+        #yt-toggle .yt-dot {
+            width: 8px; height: 8px;
+            background: #e03030;
+            border-radius: 50%;
+            display: none;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        #yt-toggle.on .yt-dot { display: inline-block; }
     </style>
 </head>
 <body>
@@ -175,6 +212,13 @@
         <button id="go-btn" class="ready">GO LIVE</button>
 
         <div id="error-msg"></div>
+
+        <div id="yt-section">
+            <button id="yt-toggle">
+                <span class="yt-dot"></span>
+                <span id="yt-label">YouTube</span>
+            </button>
+        </div>
 
         <div id="share-section">
             <div id="share-link"></div>
@@ -197,12 +241,16 @@
         const qrCanvas = document.getElementById('qr-canvas');
         const errorMsg = document.getElementById('error-msg');
         const titleInput = document.getElementById('title-input');
+        const ytSection = document.getElementById('yt-section');
+        const ytToggle = document.getElementById('yt-toggle');
+        const ytLabel = document.getElementById('yt-label');
 
         let stream = null;
         let pc = null;
         let isLive = false;
         let facingMode = 'environment';
         let whipResourceURL = null;
+        let ytActive = false;
 
         // Pre-fill title with date/time
         const now = new Date();
@@ -215,6 +263,28 @@
             errorMsg.textContent = msg;
             errorMsg.classList.add('active');
             setTimeout(() => errorMsg.classList.remove('active'), 6000);
+        }
+
+        function updateYTButton() {
+            if (ytActive) {
+                ytToggle.classList.add('on');
+                ytLabel.textContent = 'YouTube Live';
+            } else {
+                ytToggle.classList.remove('on');
+                ytLabel.textContent = 'YouTube';
+            }
+        }
+
+        async function checkYouTubeRelay() {
+            try {
+                const resp = await fetch('/api/youtube/status');
+                const data = await resp.json();
+                ytActive = data.active;
+                updateYTButton();
+                if (data.configured && isLive) {
+                    ytSection.classList.add('active');
+                }
+            } catch (e) { /* relay service unavailable */ }
         }
 
         async function getCamera() {
@@ -302,6 +372,14 @@
         }
 
         async function stopStream() {
+            // Stop YouTube relay if active
+            if (ytActive) {
+                fetch('/api/youtube/stop', { method: 'POST' }).catch(() => {});
+                ytActive = false;
+                updateYTButton();
+            }
+            ytSection.classList.remove('active');
+
             // Send WHIP DELETE to cleanly end the session on the server
             if (whipResourceURL) {
                 try {
@@ -346,6 +424,9 @@
                 goBtn.className = 'live';
                 goBtn.disabled = false;
                 statusEl.classList.add('active');
+
+                // Show YouTube toggle if configured
+                checkYouTubeRelay();
 
                 // Build share link
                 const title = encodeURIComponent(titleInput.value || '');
@@ -393,6 +474,24 @@
                     showError("Can't switch camera.");
                 }
             }
+        });
+
+        ytToggle.addEventListener('click', async () => {
+            ytToggle.disabled = true;
+            try {
+                const endpoint = ytActive ? '/api/youtube/stop' : '/api/youtube/start';
+                const resp = await fetch(endpoint, { method: 'POST' });
+                const data = await resp.json();
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    ytActive = data.active;
+                    updateYTButton();
+                }
+            } catch (e) {
+                showError("Can't reach YouTube relay.");
+            }
+            ytToggle.disabled = false;
         });
 
         copyBtn.addEventListener('click', () => {

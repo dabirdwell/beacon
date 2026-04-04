@@ -27,6 +27,19 @@ services:
     expose:
       - "80"
 
+  youtube-relay:
+    build: ./relay
+    container_name: beacon-youtube-relay
+    restart: unless-stopped
+    environment:
+      - YOUTUBE_STREAM_KEY=${YOUTUBE_STREAM_KEY:-}
+    networks:
+      - beacon
+    expose:
+      - "8080"
+    depends_on:
+      - mediamtx
+
   nginx:
     image: nginx:alpine
     container_name: beacon-nginx
@@ -44,6 +57,7 @@ services:
     depends_on:
       - mediamtx
       - app
+      - youtube-relay
     networks:
       - beacon
 
