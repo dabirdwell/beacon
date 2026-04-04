@@ -40,6 +40,21 @@ services:
     depends_on:
       - mediamtx
 
+  recorder:
+    build: ./recorder
+    container_name: beacon-recorder
+    restart: unless-stopped
+    environment:
+      - RECORDING_DIR=/recordings
+    volumes:
+      - ${RECORDING_DIR:-./recordings}:/recordings
+    networks:
+      - beacon
+    expose:
+      - "8080"
+    depends_on:
+      - mediamtx
+
   nginx:
     image: nginx:alpine
     container_name: beacon-nginx
@@ -58,6 +73,7 @@ services:
       - mediamtx
       - app
       - youtube-relay
+      - recorder
     networks:
       - beacon
 

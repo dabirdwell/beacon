@@ -17,5 +17,9 @@ fi
 YOUTUBE_STREAM_KEY="${YOUTUBE_STREAM_KEY:-}" MEDIAMTX_HOST="127.0.0.1" \
     socat TCP-LISTEN:8081,reuseaddr,fork EXEC:/relay/handler.sh &
 
+# Start recording API in background (port 8082 for Fly single-container)
+RECORDING_DIR="${RECORDING_DIR:-/recordings}" MEDIAMTX_HOST="127.0.0.1" \
+    socat TCP-LISTEN:8082,reuseaddr,fork EXEC:/recorder/handler.sh &
+
 # Start nginx in foreground (PID 1 for health checks)
 exec nginx -g 'daemon off;'

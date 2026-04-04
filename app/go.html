@@ -194,6 +194,62 @@
             animation: pulse 1.5s ease-in-out infinite;
         }
         #yt-toggle.on .yt-dot { display: inline-block; }
+        #rec-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        #rec-section.active { display: flex; }
+        #rec-toggle {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px;
+            color: #999;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            min-height: 44px;
+        }
+        #rec-toggle:active { opacity: 0.8; }
+        #rec-toggle.on {
+            background: rgba(224,48,48,0.12);
+            border-color: rgba(224,48,48,0.4);
+            color: #ff6666;
+        }
+        .rec-circle {
+            width: 14px; height: 14px;
+            border: 2px solid #e03030;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+        }
+        .rec-circle::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0; height: 0;
+            background: #e03030;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        #rec-toggle.on .rec-circle::after {
+            width: 10px; height: 10px;
+        }
+        #rec-timer {
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+            color: #999;
+            display: none;
+        }
+        #rec-toggle.on + #rec-timer { display: block; color: #ff6666; }
     </style>
 </head>
 <body>
@@ -212,6 +268,14 @@
         <button id="go-btn" class="ready">GO LIVE</button>
 
         <div id="error-msg"></div>
+
+        <div id="rec-section">
+            <button id="rec-toggle">
+                <span class="rec-circle"></span>
+                <span id="rec-label">Record</span>
+            </button>
+            <span id="rec-timer">00:00</span>
+        </div>
 
         <div id="yt-section">
             <button id="yt-toggle">
@@ -244,6 +308,10 @@
         const ytSection = document.getElementById('yt-section');
         const ytToggle = document.getElementById('yt-toggle');
         const ytLabel = document.getElementById('yt-label');
+        const recSection = document.getElementById('rec-section');
+        const recToggle = document.getElementById('rec-toggle');
+        const recLabel = document.getElementById('rec-label');
+        const recTimer = document.getElementById('rec-timer');
 
         let stream = null;
         let pc = null;
@@ -251,6 +319,9 @@
         let facingMode = 'environment';
         let whipResourceURL = null;
         let ytActive = false;
+        let recActive = false;
+        let recStartTime = null;
+        let recTimerInterval = null;
 
         // Pre-fill title with date/time
         const now = new Date();
@@ -273,6 +344,39 @@
                 ytToggle.classList.remove('on');
                 ytLabel.textContent = 'YouTube';
             }
+        }
+
+        function formatElapsed(ms) {
+            const totalSec = Math.floor(ms / 1000);
+            const m = Math.floor(totalSec / 60);
+            const s = totalSec % 60;
+            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+
+        function updateRecButton() {
+            if (recActive) {
+                recToggle.classList.add('on');
+                recLabel.textContent = 'Recording';
+            } else {
+                recToggle.classList.remove('on');
+                recLabel.textContent = 'Record';
+                recTimer.textContent = '00:00';
+            }
+        }
+
+        function startRecTimer() {
+            recStartTime = Date.now();
+            recTimerInterval = setInterval(() => {
+                recTimer.textContent = formatElapsed(Date.now() - recStartTime);
+            }, 1000);
+        }
+
+        function stopRecTimer() {
+            if (recTimerInterval) {
+                clearInterval(recTimerInterval);
+                recTimerInterval = null;
+            }
+            recStartTime = null;
         }
 
         async function checkYouTubeRelay() {
@@ -372,6 +476,15 @@
         }
 
         async function stopStream() {
+            // Stop recording if active
+            if (recActive) {
+                fetch('/api/recording/stop', { method: 'POST' }).catch(() => {});
+                recActive = false;
+                stopRecTimer();
+                updateRecButton();
+            }
+            recSection.classList.remove('active');
+
             // Stop YouTube relay if active
             if (ytActive) {
                 fetch('/api/youtube/stop', { method: 'POST' }).catch(() => {});
@@ -425,6 +538,9 @@
                 goBtn.disabled = false;
                 statusEl.classList.add('active');
 
+                // Show recording toggle
+                recSection.classList.add('active');
+
                 // Show YouTube toggle if configured
                 checkYouTubeRelay();
 
@@ -474,6 +590,29 @@
                     showError("Can't switch camera.");
                 }
             }
+        });
+
+        recToggle.addEventListener('click', async () => {
+            recToggle.disabled = true;
+            try {
+                const endpoint = recActive ? '/api/recording/stop' : '/api/recording/start';
+                const resp = await fetch(endpoint, { method: 'POST' });
+                const data = await resp.json();
+                if (data.error) {
+                    showError(data.error);
+                } else {
+                    recActive = data.active;
+                    updateRecButton();
+                    if (recActive) {
+                        startRecTimer();
+                    } else {
+                        stopRecTimer();
+                    }
+                }
+            } catch (e) {
+                showError("Can't reach recording service.");
+            }
+            recToggle.disabled = false;
         });
 
         ytToggle.addEventListener('click', async () => {

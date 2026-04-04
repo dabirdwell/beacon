@@ -41,6 +41,39 @@ Send anyone the viewer link: `https://your-domain/watch.html`
 
 They open it in any browser — no app needed, no account needed. They're watching.
 
+## Recording
+
+Beacon can record your stream to MP4 files on the server. Control it from the streamer UI while live.
+
+### Setup
+
+Recordings are saved to `./recordings` by default. To change the directory, set `RECORDING_DIR` in your `.env` file:
+
+```
+RECORDING_DIR=/path/to/recordings
+```
+
+Restart the recorder container if you change this: `docker compose up -d recorder`
+
+### Usage
+
+1. Open `https://your-domain/go.html` and tap **GO LIVE**.
+2. A **Record** button appears below the main controls.
+3. Tap it to start recording — the circle fills red and a timer shows elapsed time.
+4. Tap again to stop recording. The MP4 file is saved to disk.
+5. When you stop the main stream, any active recording stops automatically.
+
+Files are named `beacon-YYYYMMDD-HHMMSS.mp4`.
+
+### API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/recording/start` | POST | Start recording (creates timestamped MP4) |
+| `/api/recording/stop` | POST | Stop recording and finalize file |
+| `/api/recording/status` | GET | Check recording state (`active`, `filename`) |
+| `/api/recording/list` | GET | List saved recordings (`name`, `size`) |
+
 ## Optional: Stream to YouTube Too
 
 Beacon can relay your stream to YouTube Live in real time. You control it from the streamer UI — no restart required.
@@ -80,11 +113,16 @@ Phone browser ──WHIP/WebRTC──▶ MediaMTX ──HLS──▶ nginx ─�
                            youtube-relay (FFmpeg)
                                   │
                                   └──RTMP──▶ YouTube (toggle on/off)
+                                  │
+                            recorder (FFmpeg)
+                                  │
+                                  └──RTMP──▶ MP4 on disk (toggle on/off)
 ```
 
 - **MediaMTX** handles WebRTC ingest (WHIP) and HLS output
 - **nginx** reverse-proxies everything behind SSL, serves the PWA
 - **youtube-relay** FFmpeg sidecar that pushes RTMP to YouTube on demand
+- **recorder** FFmpeg sidecar that saves the stream to MP4 on demand
 - **certbot** manages Let's Encrypt SSL certificates
 - WebRTC media flows over a single muxed UDP port (8189)
 
