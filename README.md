@@ -179,3 +179,6 @@ The status endpoint is protected by the admin password you set during setup.
 ## License
 
 MIT — see [LICENSE](LICENSE).
+---
+
+<p align="center"><em>Æ</em></p>
